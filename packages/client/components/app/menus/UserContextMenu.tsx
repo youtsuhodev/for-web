@@ -1,12 +1,12 @@
 import { JSX, Match, Show, Switch } from "solid-js";
 
 import { Trans } from "@lingui-solid/solid/macro";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate, useSmartParams } from "@revolt/routing";
 import { Channel, Message, ServerMember, User } from "stoat.js";
 
 import { useClient } from "@revolt/client";
+import { CONFIGURATION } from "@revolt/common";
 import { useModals } from "@revolt/modal";
-import { useSmartParams } from "@revolt/routing";
 import { useState } from "@revolt/state";
 import { Slider, Text } from "@revolt/ui";
 
@@ -187,6 +187,55 @@ export function UserContextMenu(props: {
    */
   function copyId() {
     navigator.clipboard.writeText(props.user.id);
+  }
+
+  /**
+   * Open server selection modal for invitation
+   */
+  function openServerSelection() {
+    const servers = state.ordering.orderedServers(client());
+
+    if (servers.length === 0) return;
+
+    openModal({
+      type: "server_selection",
+      servers: servers,
+      onSelect: inviteToServer,
+    });
+  }
+  async function inviteToServer(serverId: string) {
+    const server = client().servers.get(serverId);
+    if (!server) return;
+
+    // Find a text channel in the server
+    const inviteChannel = server.channels.find(
+      (channel: Channel) => channel.type === "TextChannel",
+    );
+    if (!inviteChannel) return;
+
+    try {
+      // Create invite for the channel
+      const invite = await inviteChannel.createInvite();
+
+      // Generate invite link
+      const inviteLink = CONFIGURATION.IS_STOAT
+        ? `https://stt.gg/${invite._id}`
+        : `${window.location.protocol}//${window.location.host}/invite/${invite._id}`;
+
+      // Open DM with the user and send the invite
+      const dmChannel = await props.user.openDM();
+
+      // Send the invite message
+      await dmChannel.sendMessage({
+        content: inviteLink,
+      });
+
+      // Navigate to the DM channel
+      navigate(dmChannel.url);
+    } catch (error) {
+      console.error("Failed to invite user to server:", error);
+      // You could show an error message to the user here
+    }
   }
 
   return (
@@ -385,6 +434,13 @@ export function UserContextMenu(props: {
             <Trans>Unblock user</Trans>
           </ContextMenuButton>
         </Show>
+      </Show>
+
+      {/* Invite to server */}
+      <Show when={!props.user.self && props.user.relationship === "Friend"}>
+        <ContextMenuButton icon={MdPersonAddAlt} onClick={openServerSelection}>
+          <Trans>Invite to server</Trans>
+        </ContextMenuButton>
       </Show>
 
       <Show

@@ -94,6 +94,11 @@ export type Modals =
       channel: Channel;
     }
   | {
+      type: "server_selection";
+      servers: Server[];
+      onSelect: (serverId: string) => void;
+    }
+  | {
       type: "create_server";
       client: Client;
     }

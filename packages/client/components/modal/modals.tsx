@@ -50,6 +50,7 @@ import { ReportContentModal } from "./modals/ReportContent";
 import { ResetBotTokenModal } from "./modals/ResetBotToken";
 import { ServerIdentityModal } from "./modals/ServerIdentity";
 import { ServerInfoModal } from "./modals/ServerInfo";
+import { ServerSelectionModal } from "./modals/ServerSelection";
 import { SettingsModal } from "./modals/Settings";
 import { SignOutSessionsModal } from "./modals/SignOutSessions";
 import { SignedOutModal } from "./modals/SignedOut";
@@ -109,6 +110,8 @@ export function RenderModal(props: ActiveModal & { onClose: () => void }) {
       return <CreateRoleModal {...modalProps} />;
     case "create_server":
       return <CreateServerModal {...modalProps} />;
+    case "server_selection":
+      return <ServerSelectionModal {...modalProps} />;
     case "create_webhook":
       return <CreateWebhookModal {...modalProps} />;
     case "custom_status":
